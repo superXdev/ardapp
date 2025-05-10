@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --card-1-from: #2a1b3d;
+  --card-1-to: #3a2b5d;
+  --card-2-from: #2b1d42;
+  --card-2-to: #462975;
+  --card-3-from: #1f1d42;
+  --card-3-to: #2d3a80;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --accent-1: #6a11cb;
+  --accent-2: #2575fc;
+  --accent-3: #f9d423;
+}
+
+@layer base {
+  body {
+    @apply bg-black text-white font-sans;
+  }
+}
+
+@layer components {
+  .from-card-1-from {
+    --tw-gradient-from: var(--card-1-from) var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(42 27 61 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+
+  .to-card-1-to {
+    --tw-gradient-to: var(--card-1-to) var(--tw-gradient-to-position);
+  }
+
+  .from-card-2-from {
+    --tw-gradient-from: var(--card-2-from) var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(43 29 66 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+
+  .to-card-2-to {
+    --tw-gradient-to: var(--card-2-to) var(--tw-gradient-to-position);
+  }
+
+  .from-card-3-from {
+    --tw-gradient-from: var(--card-3-from) var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(31 29 66 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+
+  .to-card-3-to {
+    --tw-gradient-to: var(--card-3-to) var(--tw-gradient-to-position);
+  }
+
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(106, 17, 203, 0.5) rgba(0, 0, 0, 0.2);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(106, 17, 203, 0.5);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(106, 17, 203, 0.7);
+  }
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+}

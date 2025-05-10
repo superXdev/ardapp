@@ -1,19 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 
-interface HeroSectionProps {
-   walletAddress: string | null;
-   onConnectWallet: () => Promise<void>;
-}
-
-export default function HeroSection({
-   walletAddress,
-   onConnectWallet,
-}: HeroSectionProps) {
+export default function HeroSection() {
    const [isGlitching, setIsGlitching] = useState(false);
+   const { address, isConnected } = useAppKitAccount();
+   const { open } = useAppKit();
+
+   const onConnectWallet = async () => {
+      if (isConnected) {
+         await open({ view: "Account" });
+         return;
+      }
+
+      await open({ view: "Connect" });
+   };
 
    useEffect(() => {
       const interval = setInterval(() => {
@@ -56,12 +60,12 @@ export default function HeroSection({
                className="relative group bg-black/20 hover:bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-full px-6 py-2 transition-all duration-300"
             >
                <span className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-30 blur-md transition-opacity duration-300"></span>
-               <Sparkles className="w-4 h-4 mr-2 inline-block" />
-               {walletAddress
-                  ? `Connected: ${walletAddress.substring(
+               <Wallet className="w-4 h-4 mr-2 inline-block" />
+               {isConnected && address
+                  ? `Connected: ${address.substring(
                        0,
                        6
-                    )}...${walletAddress.substring(walletAddress.length - 4)}`
+                    )}...${address.substring(address.length - 4)}`
                   : "Connect Wallet"}
             </Button>
          </div>

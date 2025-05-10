@@ -1,0 +1,192 @@
+[
+   {
+      "anonymous": false,
+      "inputs": [
+         {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+         },
+         {
+            "indexed": false,
+            "internalType": "string",
+            "name": "kode",
+            "type": "string"
+         },
+         {
+            "indexed": false,
+            "internalType": "string",
+            "name": "deskripsi",
+            "type": "string"
+         },
+         {
+            "indexed": true,
+            "internalType": "address",
+            "name": "pembuat",
+            "type": "address"
+         }
+      ],
+      "name": "DramaBaru",
+      "type": "event"
+   },
+   {
+      "anonymous": false,
+      "inputs": [
+         {
+            "indexed": false,
+            "internalType": "string",
+            "name": "link",
+            "type": "string"
+         },
+         {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "idDrama",
+            "type": "uint256"
+         },
+         {
+            "indexed": true,
+            "internalType": "address",
+            "name": "pembuat",
+            "type": "address"
+         }
+      ],
+      "name": "HapusTopik",
+      "type": "event"
+   },
+   {
+      "anonymous": false,
+      "inputs": [],
+      "name": "RenounceOwnership",
+      "type": "event"
+   },
+   {
+      "anonymous": false,
+      "inputs": [
+         {
+            "indexed": false,
+            "internalType": "string",
+            "name": "link",
+            "type": "string"
+         },
+         {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "idDrama",
+            "type": "uint256"
+         },
+         {
+            "indexed": true,
+            "internalType": "address",
+            "name": "pembuat",
+            "type": "address"
+         }
+      ],
+      "name": "TopikBaru",
+      "type": "event"
+   },
+   {
+      "anonymous": false,
+      "inputs": [
+         {
+            "indexed": false,
+            "internalType": "address",
+            "name": "newOwner",
+            "type": "address"
+         }
+      ],
+      "name": "TransferOWnership",
+      "type": "event"
+   },
+   {
+      "inputs": [],
+      "name": "_owner",
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "stateMutability": "view",
+      "type": "function"
+   },
+   {
+      "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "name": "drama",
+      "outputs": [
+         { "internalType": "string", "name": "kode", "type": "string" },
+         { "internalType": "string", "name": "deskripsi", "type": "string" },
+         { "internalType": "address", "name": "pembuat", "type": "address" },
+         { "internalType": "uint256", "name": "waktu", "type": "uint256" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+   },
+   {
+      "inputs": [
+         { "internalType": "uint256", "name": "idDrama", "type": "uint256" },
+         { "internalType": "uint256", "name": "idTopik", "type": "uint256" }
+      ],
+      "name": "hapusTopikDrama",
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+      "stateMutability": "nonpayable",
+      "type": "function"
+   },
+   {
+      "inputs": [],
+      "name": "lastId",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+   },
+   {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+   },
+   {
+      "inputs": [
+         { "internalType": "string", "name": "kode", "type": "string" },
+         { "internalType": "string", "name": "deskripsi", "type": "string" }
+      ],
+      "name": "tambahDramaBaru",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "nonpayable",
+      "type": "function"
+   },
+   {
+      "inputs": [
+         { "internalType": "string", "name": "link", "type": "string" },
+         { "internalType": "uint256", "name": "idDrama", "type": "uint256" }
+      ],
+      "name": "tambahTopikDrama",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "nonpayable",
+      "type": "function"
+   },
+   {
+      "inputs": [
+         { "internalType": "uint256", "name": "", "type": "uint256" },
+         { "internalType": "uint256", "name": "", "type": "uint256" }
+      ],
+      "name": "topics",
+      "outputs": [
+         { "internalType": "string", "name": "link", "type": "string" },
+         { "internalType": "address", "name": "pembuat", "type": "address" },
+         { "internalType": "uint256", "name": "waktu", "type": "uint256" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+   },
+   {
+      "inputs": [
+         {
+            "internalType": "address",
+            "name": "ownerAddress",
+            "type": "address"
+         }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+   }
+]

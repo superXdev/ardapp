@@ -86,6 +86,21 @@ export async function tambahTopikDrama(
    return true;
 }
 
+export async function hapusDrama(dramaId: string, signer: any): Promise<boolean> {
+   try {
+      const contract = new ethers.Contract(
+         SC_ADDRESS,
+         require("@/app/context/abi.json"),
+         signer
+      );
+      await contract.hapusDrama(dramaId);
+      return true;
+   } catch (error) {
+      console.error("Error deleting drama:", error);
+      return false;
+   }
+}
+
 export async function hapusTopikDrama(
    dramaId: string,
    topicId: string

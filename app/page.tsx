@@ -9,7 +9,6 @@ import Pagination from "@/components/pagination";
 import type { Drama, Topic } from "@/lib/types";
 import { getCurrentWalletAddress, getDrama, isContractOwner } from "@/lib/web3";
 import { useAppKitAccount } from "@reown/appkit/react";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
    const { address, isConnected } = useAppKitAccount();
@@ -18,17 +17,11 @@ export default function Home() {
    const dramasPerPage = 5;
 
    const [dramas, setDramas] = useState<Drama[] | null>(null);
-   const [isLoading, setIsLoading] = useState(true);
 
    useEffect(() => {
       const fetchDrama = async () => {
-         setIsLoading(true);
-         try {
-            const drama = await getDrama();
-            setDramas(drama);
-         } finally {
-            setIsLoading(false);
-         }
+         const drama = await getDrama();
+         setDramas(drama);
       };
       fetchDrama();
    }, []);
@@ -141,30 +134,13 @@ export default function Home() {
 
             {isConnected && <NewDramaForm onSubmit={tambahDramaBaru} />}
 
-            <div className="mt-8">
-               {isLoading ? (
-                  <div className="space-y-4">
-                     {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i} className="flex gap-4">
-                           <Skeleton className="h-16 w-16 rounded-lg" />
-                           <div className="flex-1 space-y-2">
-                              <Skeleton className="h-4 w-3/4" />
-                              <Skeleton className="h-4 w-1/2" />
-                              <Skeleton className="h-4 w-3/4" />
-                           </div>
-                        </div>
-                     ))}
-                  </div>
-               ) : (
-                  <DramaFeed
-                     dramas={currentDramas}
-                     walletAddress={address || null}
-                     onAddTopic={tambahTopikDrama}
-                     onDeleteTopic={hapusTopikDrama}
-                     onDeleteDrama={hapusDrama}
-                  />
-               )}
-            </div>
+            <DramaFeed
+               dramas={currentDramas}
+               walletAddress={address || null}
+               onAddTopic={tambahTopikDrama}
+               onDeleteTopic={hapusTopikDrama}
+               onDeleteDrama={hapusDrama}
+            />
 
             {dramas && dramasPerPage && (
                <Pagination

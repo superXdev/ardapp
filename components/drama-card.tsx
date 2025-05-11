@@ -118,9 +118,17 @@ export default function DramaCard({
 
             <div className="flex items-center gap-2 text-sm text-white/70">
                <div className="w-6 h-6 rounded-full bg-[#6a11cb]/30 flex items-center justify-center text-xs">
-                  {drama.creator.substring(0, 2)}
+                  0x
                </div>
-               {drama.creator}
+               <a
+                  href={`https://basescan.org/address/${drama.creator}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline"
+               >
+                  {drama.creator.substring(0, 8)}...
+                  {drama.creator.substring(36)}
+               </a>
             </div>
 
             <div className="pt-4 border-t border-white/10">

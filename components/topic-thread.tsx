@@ -11,6 +11,7 @@ import {
    MessageSquare,
 } from "lucide-react";
 import Lightbox from "./lightbox";
+import { useAppKitAccount } from "@reown/appkit/react";
 
 interface TopicThreadProps {
    topic: Topic;
@@ -61,9 +62,9 @@ export default function TopicThread({
 }: TopicThreadProps) {
    // Check if user is owner - make case-insensitive comparison
    // Also show delete button in development mode for testing
-   const isOwner = walletAddress && 
-      (walletAddress.toLowerCase() === topic.pembuat.toLowerCase() || 
-       process.env.NODE_ENV === 'development');
+   const { address } = useAppKitAccount();
+   const isOwner =
+      address && address.toLowerCase() === topic.pembuat.toLowerCase();
    const [lightboxOpen, setLightboxOpen] = useState(false);
    const [isDeleting, setIsDeleting] = useState(false);
 
@@ -203,16 +204,20 @@ export default function TopicThread({
             </div>
 
             {/* Always show delete button for now to debug */}
-            {true && (
+            {isOwner && (
                <button
                   onClick={async () => {
-                     if (window.confirm('Are you sure you want to delete this topic?')) {
+                     if (
+                        window.confirm(
+                           "Are you sure you want to delete this topic?"
+                        )
+                     ) {
                         setIsDeleting(true);
                         try {
                            await onDeleteTopic(dramaId, topic.id);
                         } catch (error) {
-                           console.error('Error deleting topic:', error);
-                           alert('Failed to delete topic. Please try again.');
+                           console.error("Error deleting topic:", error);
+                           alert("Failed to delete topic. Please try again.");
                         } finally {
                            setIsDeleting(false);
                         }

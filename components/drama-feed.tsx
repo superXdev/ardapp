@@ -6,7 +6,7 @@ interface DramaFeedProps {
    walletAddress: string | null;
    onAddTopic: (
       dramaId: string,
-      type: "link" | "image",
+      type: "link" | "image" | "text",
       content: string
    ) => void;
    onDeleteTopic: (dramaId: string, topicId: string) => void;

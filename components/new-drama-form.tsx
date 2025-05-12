@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Flame } from "lucide-react";
+import { Flame, ChevronDown, ChevronUp } from "lucide-react";
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 import { BrowserProvider, Eip1193Provider, ethers } from "ethers";
 import { newDrama } from "@/lib/web3";
@@ -20,6 +20,7 @@ export default function NewDramaForm({ onSubmit }: NewDramaFormProps) {
    const [kode, setKode] = useState("");
    const [deskripsi, setDeskripsi] = useState("");
    const [isLoading, setIsLoading] = useState(false);
+   const [isCollapsed, setIsCollapsed] = useState(false);
    const [alertMessage, setAlertMessage] = useState<string | null>(null);
    const [alertType, setAlertType] = useState<"success" | "error" | "info">(
       "info"
@@ -75,12 +76,30 @@ export default function NewDramaForm({ onSubmit }: NewDramaFormProps) {
             </div>
          )}
          <Card className="mb-8 bg-[#2a1b3d]/60 backdrop-blur-md border-[#6a11cb]/20 shadow-xl">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
                <CardTitle className="text-2xl font-bold">
                   Post New Drama
                </CardTitle>
+               <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="h-8 w-8 rounded-full"
+               >
+                  {isCollapsed ? (
+                     <ChevronDown className="h-5 w-5" />
+                  ) : (
+                     <ChevronUp className="h-5 w-5" />
+                  )}
+               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent
+               className={`overflow-hidden transition-all duration-300 ${
+                  isCollapsed
+                     ? "max-h-0 opacity-0 p-0"
+                     : "max-h-[500px] opacity-100"
+               }`}
+            >
                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                      <Input

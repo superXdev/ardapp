@@ -11,6 +11,7 @@ interface DramaFeedProps {
    ) => void;
    onDeleteTopic: (dramaId: string, topicId: string) => void;
    onDeleteDrama: (dramaId: string) => void;
+   isLoadingTopics?: boolean;
 }
 
 export default function DramaFeed({
@@ -19,6 +20,7 @@ export default function DramaFeed({
    onAddTopic,
    onDeleteTopic,
    onDeleteDrama,
+   isLoadingTopics = false,
 }: DramaFeedProps) {
    const gradients = [
       "from-card-1-from to-card-1-to",
@@ -49,6 +51,7 @@ export default function DramaFeed({
                   onAddTopic={onAddTopic}
                   onDeleteTopic={onDeleteTopic}
                   onDeleteDrama={onDeleteDrama}
+                  isLoadingTopics={isLoadingTopics}
                />
             ))
          )}

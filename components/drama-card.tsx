@@ -22,6 +22,8 @@ import {
    MessageCircle,
    ChevronDown,
    ChevronUp,
+   MessageSquare,
+   X,
 } from "lucide-react";
 import TopicThread from "./topic-thread";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,11 +34,12 @@ interface DramaCardProps {
    walletAddress: string | null;
    onAddTopic: (
       dramaId: string,
-      type: "link" | "image",
+      type: "link" | "image" | "text",
       content: string
    ) => void;
    onDeleteTopic: (dramaId: string, topicId: string) => void;
    onDeleteDrama: (dramaId: string) => void;
+   isLoadingTopics?: boolean;
 }
 
 export default function DramaCard({
@@ -46,43 +49,110 @@ export default function DramaCard({
    onAddTopic,
    onDeleteTopic,
    onDeleteDrama,
+   isLoadingTopics = false,
 }: DramaCardProps) {
    const [linkContent, setLinkContent] = useState("");
-   const [topicType, setTopicType] = useState<"link" | "image">("link");
+   const [textContent, setTextContent] = useState("");
+   const [topicType, setTopicType] = useState<"link" | "image" | "text">(
+      "link"
+   );
    const [imagePreview, setImagePreview] = useState<string | null>(null);
    const fileInputRef = useRef<HTMLInputElement>(null);
    const [isTopicsExpanded, setIsTopicsExpanded] = useState(true);
    const [topicsToShow, setTopicsToShow] = useState(3);
+   const [isSubmittingTopic, setIsSubmittingTopic] = useState(false);
+   const [isUploadingImage, setIsUploadingImage] = useState(false);
+   const [uploadStatus, setUploadStatus] = useState<
+      "idle" | "uploading" | "success" | "error"
+   >("idle");
 
-   const handleAddTopic = (e: React.FormEvent) => {
+   const handleAddTopic = async (e: React.FormEvent) => {
       e.preventDefault();
-      if (topicType === "link" && linkContent.trim()) {
-         onAddTopic(drama.id, "link", linkContent);
-         setLinkContent("");
-      } else if (topicType === "image" && imagePreview) {
-         onAddTopic(drama.id, "image", imagePreview);
-         setImagePreview(null);
-         if (fileInputRef.current) {
-            fileInputRef.current.value = "";
+
+      try {
+         setIsSubmittingTopic(true);
+
+         if (topicType === "link" && linkContent.trim()) {
+            // Process link content before sending to ensure it has proper format
+            let processedLink = linkContent.trim();
+
+            // Make sure link has proper format
+            if (
+               !processedLink.startsWith("http://") &&
+               !processedLink.startsWith("https://")
+            ) {
+               processedLink = `https://${processedLink}`;
+            }
+
+            await onAddTopic(drama.id, "link", processedLink);
+            setLinkContent("");
+         } else if (topicType === "image" && imagePreview) {
+            await onAddTopic(drama.id, "image", imagePreview);
+            setImagePreview(null);
+            setUploadStatus("idle");
+            if (fileInputRef.current) {
+               fileInputRef.current.value = "";
+            }
+         } else if (topicType === "text" && textContent.trim()) {
+            await onAddTopic(drama.id, "text", textContent.trim());
+            setTextContent("");
+         }
+      } catch (error) {
+         console.error("Error adding topic:", error);
+      } finally {
+         setIsSubmittingTopic(false);
+      }
+   };
+
+   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+         // Show loading state
+         setIsUploadingImage(true);
+         setUploadStatus("uploading");
+
+         try {
+            // Create a preview for immediate feedback
+            const reader = new FileReader();
+            reader.onloadend = () => {
+               // Just for preview, not for submission
+               setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+
+            // Upload to IPFS via our API route
+            const formData = new FormData();
+            formData.append("file", file);
+
+            console.log("Uploading image to IPFS...");
+            const response = await fetch("/api/upload", {
+               method: "POST",
+               body: formData,
+            });
+
+            if (!response.ok) {
+               const errorData = await response.json();
+               throw new Error(errorData.error || "Upload failed");
+            }
+
+            const data = await response.json();
+            console.log("IPFS upload successful:", data);
+
+            // Store the IPFS hash instead of the full image data
+            // We only submit this to the blockchain when the user clicks add topic
+            setImagePreview(data.ipfsHash);
+            setUploadStatus("success");
+         } catch (error) {
+            console.error("Error uploading to IPFS:", error);
+            setUploadStatus("error");
+         } finally {
+            setIsUploadingImage(false);
          }
       }
    };
 
-   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-         const reader = new FileReader();
-         reader.onload = (event) => {
-            setImagePreview(event.target?.result as string);
-         };
-         reader.readAsDataURL(file);
-      }
-   };
-
    const handleDeleteDrama = () => {
-      if (confirm("Are you sure you want to delete this drama?")) {
-         onDeleteDrama(drama.id);
-      }
+      onDeleteDrama(drama.id);
    };
 
    const hasMoreTopics = drama.topics.length > topicsToShow;
@@ -137,27 +207,31 @@ export default function DramaCard({
                      defaultValue="link"
                      className="w-full"
                      onValueChange={(value) => {
-                        setTopicType(value as "link" | "image");
+                        setTopicType(value as "link" | "image" | "text");
                         setImagePreview(null);
                         if (fileInputRef.current) {
                            fileInputRef.current.value = "";
                         }
                      }}
                   >
-                     <TabsList className="grid grid-cols-2 mb-2 bg-black/20">
+                     <TabsList className="bg-white/10 border border-white/20 p-1">
                         <TabsTrigger
                            value="link"
-                           className="data-[state=active]:bg-[#6a11cb]/40"
+                           className="text-sm font-medium text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6a11cb] data-[state=active]:to-[#f9d423]"
                         >
-                           <Link className="w-4 h-4 mr-2" />
-                           Link
+                           <Link className="w-4 h-4 mr-1" /> Link
                         </TabsTrigger>
                         <TabsTrigger
                            value="image"
-                           className="data-[state=active]:bg-[#6a11cb]/40"
+                           className="text-sm font-medium text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6a11cb] data-[state=active]:to-[#f9d423]"
                         >
-                           <ImageIcon className="w-4 h-4 mr-2" />
-                           Image
+                           <ImageIcon className="w-4 h-4 mr-1" /> Image
+                        </TabsTrigger>
+                        <TabsTrigger
+                           value="text"
+                           className="text-sm font-medium text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6a11cb] data-[state=active]:to-[#f9d423]"
+                        >
+                           <MessageSquare className="w-4 h-4 mr-1" /> Text
                         </TabsTrigger>
                      </TabsList>
                      <TabsContent value="link" className="mt-0">
@@ -171,10 +245,22 @@ export default function DramaCard({
                            <Button
                               type="submit"
                               size="sm"
-                              className="bg-gradient-to-r from-[#6a11cb] to-[#f9d423] hover:from-[#5a0cb6] hover:to-[#e9c413] text-white"
+                              disabled={
+                                 !linkContent.trim() || isSubmittingTopic
+                              }
+                              className="bg-gradient-to-r from-[#6a11cb] to-[#f9d423] hover:from-[#5a0cb6] hover:to-[#e9c413] text-white disabled:opacity-50"
                            >
-                              <Plus className="w-4 h-4 mr-1" />
-                              Add
+                              {isSubmittingTopic ? (
+                                 <span className="flex items-center">
+                                    <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                    Adding...
+                                 </span>
+                              ) : (
+                                 <>
+                                    <Plus className="w-4 h-4 mr-1" />
+                                    Add
+                                 </>
+                              )}
                            </Button>
                         </div>
                      </TabsContent>
@@ -184,15 +270,29 @@ export default function DramaCard({
                               <div className="relative flex-1">
                                  <Button
                                     type="button"
-                                    className="w-full bg-white/10 hover:bg-white/20 border border-dashed border-white/30 text-white h-10 px-3 py-2 flex items-center justify-center"
+                                    className={`w-full ${
+                                       isUploadingImage
+                                          ? "bg-white/20"
+                                          : "bg-white/10 hover:bg-white/20"
+                                    } border border-dashed border-white/30 text-white h-10 px-3 py-2 flex items-center justify-center`}
                                     onClick={() =>
                                        fileInputRef.current?.click()
                                     }
+                                    disabled={isUploadingImage}
                                  >
-                                    <Upload className="w-4 h-4 mr-2" />
-                                    {imagePreview
-                                       ? "Change Image"
-                                       : "Choose Image File"}
+                                    {isUploadingImage ? (
+                                       <span className="flex items-center">
+                                          <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                          Uploading to IPFS...
+                                       </span>
+                                    ) : (
+                                       <>
+                                          <Upload className="w-4 h-4 mr-2" />
+                                          {imagePreview
+                                             ? "Change Image"
+                                             : "Choose Image File"}
+                                       </>
+                                    )}
                                  </Button>
                                  <input
                                     type="file"
@@ -200,25 +300,53 @@ export default function DramaCard({
                                     accept="image/*"
                                     onChange={handleFileChange}
                                     className="hidden"
+                                    disabled={isUploadingImage}
                                  />
                               </div>
                               <Button
                                  type="submit"
                                  size="sm"
-                                 disabled={!imagePreview}
+                                 disabled={
+                                    !imagePreview ||
+                                    isSubmittingTopic ||
+                                    isUploadingImage
+                                 }
                                  className="bg-gradient-to-r from-[#6a11cb] to-[#f9d423] hover:from-[#5a0cb6] hover:to-[#e9c413] text-white disabled:opacity-50"
                               >
-                                 <Plus className="w-4 h-4 mr-1" />
-                                 Add
+                                 {isSubmittingTopic ? (
+                                    <span className="flex items-center">
+                                       <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                       Adding...
+                                    </span>
+                                 ) : (
+                                    <>
+                                       <Plus className="w-4 h-4 mr-1" />
+                                       Add
+                                    </>
+                                 )}
                               </Button>
                            </div>
                            {imagePreview && (
                               <div className="mt-2 relative">
                                  <img
-                                    src={imagePreview || "/placeholder.svg"}
+                                    src={
+                                       imagePreview.startsWith("Qm") ||
+                                       imagePreview.startsWith("baf")
+                                          ? `https://gateway.pinata.cloud/ipfs/${imagePreview}`
+                                          : imagePreview
+                                    }
                                     alt="Preview"
                                     className="rounded-lg max-h-32 object-cover border border-white/20"
+                                    onError={(e) => {
+                                       e.currentTarget.src =
+                                          "/abstract-geometric-shapes.png";
+                                    }}
                                  />
+                                 {uploadStatus === "success" && (
+                                    <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-0.5 rounded-md text-xs">
+                                       Uploaded to IPFS ✓
+                                    </div>
+                                 )}
                                  <Button
                                     type="button"
                                     size="sm"
@@ -226,6 +354,7 @@ export default function DramaCard({
                                     className="absolute top-2 right-2 h-6 w-6 p-0 rounded-full bg-red-500/80"
                                     onClick={() => {
                                        setImagePreview(null);
+                                       setUploadStatus("idle");
                                        if (fileInputRef.current) {
                                           fileInputRef.current.value = "";
                                        }
@@ -235,6 +364,44 @@ export default function DramaCard({
                                  </Button>
                               </div>
                            )}
+                        </div>
+                     </TabsContent>
+                     <TabsContent value="text" className="mt-0">
+                        <div className="space-y-3">
+                           <div className="flex gap-2">
+                              <div className="relative flex-1">
+                                 <textarea
+                                    value={textContent}
+                                    onChange={(e) =>
+                                       setTextContent(e.target.value)
+                                    }
+                                    placeholder="Write your text here..."
+                                    className="w-full bg-white/10 hover:bg-white/15 focus:bg-white/20 border border-white/30 text-white h-20 px-3 py-2 rounded-md resize-none focus:outline-none focus:ring-1 focus:ring-[#6a11cb]"
+                                 />
+                              </div>
+                           </div>
+                           <div className="flex justify-end">
+                              <Button
+                                 type="submit"
+                                 size="sm"
+                                 disabled={
+                                    !textContent.trim() || isSubmittingTopic
+                                 }
+                                 className="bg-gradient-to-r from-[#6a11cb] to-[#f9d423] hover:from-[#5a0cb6] hover:to-[#e9c413] text-white disabled:opacity-50"
+                              >
+                                 {isSubmittingTopic ? (
+                                    <span className="flex items-center">
+                                       <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                       Adding...
+                                    </span>
+                                 ) : (
+                                    <>
+                                       <Plus className="w-4 h-4 mr-1" />
+                                       Add
+                                    </>
+                                 )}
+                              </Button>
+                           </div>
                         </div>
                      </TabsContent>
                   </Tabs>
@@ -250,6 +417,7 @@ export default function DramaCard({
                onDeleteTopic={onDeleteTopic}
                onShowMore={handleShowMoreTopics}
                onShowLess={handleShowLessTopics}
+               isLoading={isLoadingTopics}
             />
          </div>
          <DramaCardActions

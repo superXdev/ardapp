@@ -1,6 +1,6 @@
 export interface Topic {
   id: string
-  type: "link" | "image"
+  type: "link" | "image" | "text"
   content: string
   pembuat: string
   waktu: number

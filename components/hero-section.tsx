@@ -48,7 +48,7 @@ export default function HeroSection() {
                   isGlitching ? "glitch" : ""
                }`}
             >
-               Arsip Drama
+               ArDapp
             </h1>
 
             <p className="text-xl md:text-2xl mb-6 font-light">

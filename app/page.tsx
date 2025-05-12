@@ -1,13 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ethers } from "ethers";
+
+// TypeScript declaration for window.ethereum
+declare global {
+  interface Window {
+    ethereum?: Record<string, unknown>;
+  }
+}
 import HeroSection from "@/components/hero-section";
 import NewDramaForm from "@/components/new-drama-form";
 import DramaFeed from "@/components/drama-feed";
 import OwnerActions from "@/components/owner-actions";
 import Pagination from "@/components/pagination";
 import type { Drama, Topic } from "@/lib/types";
-import { getCurrentWalletAddress, getDrama, isContractOwner } from "@/lib/web3";
+import { getCurrentWalletAddress, getDrama, isContractOwner, tambahTopikDrama as addTopicToContract, hapusTopikDrama as deleteTopicFromContract } from "@/lib/web3";
 import { useAppKitAccount } from "@reown/appkit/react";
 
 export default function Home() {
@@ -17,6 +25,7 @@ export default function Home() {
    const dramasPerPage = 5;
 
    const [dramas, setDramas] = useState<Drama[] | null>(null);
+   const [isLoadingTopics, setIsLoadingTopics] = useState(false);
 
    useEffect(() => {
       const fetchDrama = async () => {
@@ -43,47 +52,140 @@ export default function Home() {
       setCurrentPage(1);
    };
 
-   const tambahTopikDrama = (
+   const tambahTopikDrama = async (
       dramaId: string,
-      type: "link" | "image",
+      type: "link" | "image" | "text",
       content: string
    ) => {
       if (!address || !dramas) return;
 
-      const newTopic: Topic = {
-         id: Math.random().toString(36).substring(2, 9),
-         type,
-         content,
-         pembuat: address,
-         waktu: Date.now(),
-      };
+      try {
+         // Check if window.ethereum is available
+         if (!window.ethereum) {
+            throw new Error("MetaMask or another wallet provider is required");
+         }
 
-      setDramas(
-         dramas.map((drama) => {
-            if (drama.id === dramaId) {
-               return {
-                  ...drama,
-                  topics: [...drama.topics, newTopic],
-               };
+         // Get the signer from the window.ethereum provider
+         const provider = new ethers.BrowserProvider(window.ethereum as any);
+         const signer = await provider.getSigner();
+
+         // Prepare content based on the selected type
+         let processedContent = content;
+         
+         // For links - ensure they have the proper protocol prefix
+         if (type === "link" && !content.startsWith("http://") && !content.startsWith("https://")) {
+            processedContent = `https://${content}`;
+         }
+         
+         // Add the type markers for explicit content type tracking
+         if (type === "link") {
+            processedContent = `__LINK__:${processedContent}`;
+         } else if (type === "text") {
+            processedContent = `__TEXT__:${processedContent}`;
+         }
+         // No prefix needed for images - they're detected by content type
+         
+         // Send to the blockchain
+         const success = await addTopicToContract(dramaId, processedContent, signer);
+
+         if (success) {
+            // Optimistically update UI with the properly processed content
+            // We need to use the same processing logic as in the backend
+            let displayContent = processedContent;
+            
+            // Remove any special prefixes we added
+            if (displayContent.startsWith('__LINK__:')) {
+               displayContent = displayContent.substring(9);
+            } else if (displayContent.startsWith('__TEXT__:')) {
+               displayContent = displayContent.substring(9);
             }
-            return drama;
-         })
-      );
+            
+            const newTopic: Topic = {
+               id: Math.random().toString(36).substring(2, 9), // This will be replaced on refresh
+               type,
+               content: displayContent, // Use the processed content without prefixes
+               pembuat: address,
+               waktu: Date.now(),
+            };
+
+            setDramas(
+               dramas.map((drama) => {
+                  if (drama.id === dramaId) {
+                     return {
+                        ...drama,
+                        topics: [...drama.topics, newTopic],
+                     };
+                  }
+                  return drama;
+               })
+            );
+
+            // Refresh data after a short delay to get the actual topic ID from blockchain
+            setIsLoadingTopics(true);
+            setTimeout(async () => {
+               try {
+                  const updatedDramas = await getDrama();
+                  setDramas(updatedDramas);
+               } catch (error) {
+                  console.error("Error refreshing dramas:", error);
+               } finally {
+                  setIsLoadingTopics(false);
+               }
+            }, 2000);
+         }
+      } catch (error) {
+         console.error("Error adding topic:", error);
+         alert("Failed to add topic. See console for details.");
+      }
    };
 
-   const hapusTopikDrama = (dramaId: string, topicId: string) => {
-      if (!dramas) return;
-      setDramas(
-         dramas.map((drama) => {
-            if (drama.id === dramaId) {
-               return {
-                  ...drama,
-                  topics: drama.topics.filter((topic) => topic.id !== topicId),
-               };
-            }
-            return drama;
-         })
-      );
+   const hapusTopikDrama = async (dramaId: string, topicId: string) => {
+      if (!dramas || !address) return;
+
+      try {
+         // Check if window.ethereum is available
+         if (!window.ethereum) {
+            throw new Error("MetaMask or another wallet provider is required");
+         }
+
+         // Get the signer from the window.ethereum provider
+         const provider = new ethers.BrowserProvider(window.ethereum as any);
+         const signer = await provider.getSigner();
+
+         // Call the smart contract function
+         const success = await deleteTopicFromContract(dramaId, topicId, signer);
+
+         if (success) {
+            // Optimistically update UI
+            setDramas(
+               dramas.map((drama) => {
+                  if (drama.id === dramaId) {
+                     return {
+                        ...drama,
+                        topics: drama.topics.filter((topic) => topic.id !== topicId),
+                     };
+                  }
+                  return drama;
+               })
+            );
+
+            // Refresh data after a short delay
+            setIsLoadingTopics(true);
+            setTimeout(async () => {
+               try {
+                  const updatedDramas = await getDrama();
+                  setDramas(updatedDramas);
+               } catch (error) {
+                  console.error("Error refreshing dramas:", error);
+               } finally {
+                  setIsLoadingTopics(false);
+               }
+            }, 2000);
+         }
+      } catch (error) {
+         console.error("Error deleting topic:", error);
+         alert("Failed to delete topic. See console for details.");
+      }
    };
 
    const hapusDrama = (dramaId: string) => {
@@ -140,6 +242,7 @@ export default function Home() {
                onAddTopic={tambahTopikDrama}
                onDeleteTopic={hapusTopikDrama}
                onDeleteDrama={hapusDrama}
+               isLoadingTopics={isLoadingTopics}
             />
 
             {dramas && dramasPerPage && (

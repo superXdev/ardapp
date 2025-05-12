@@ -33,7 +33,9 @@ export default function NewDramaForm({ onSubmit }: NewDramaFormProps) {
       const signer = await provider.getSigner();
 
       if (!kode.trim() || !deskripsi.trim()) {
-         setAlertMessage("Please fill in both Kode Drama and Deskripsi Drama");
+         setAlertMessage(
+            "Please fill in both Title Drama and Description Drama"
+         );
          setAlertType("error");
          setIsLoading(false);
          return;
@@ -42,13 +44,13 @@ export default function NewDramaForm({ onSubmit }: NewDramaFormProps) {
       const result = await newDrama(kode, deskripsi, signer);
 
       if (!result) {
-         setAlertMessage("Gagal menambahkan drama. Silakan coba lagi.");
+         setAlertMessage("Failed to add drama. Please try again.");
          setAlertType("error");
          setIsLoading(false);
          return;
       }
 
-      setAlertMessage("Drama berhasil ditambahkan!");
+      setAlertMessage("Successfully submitted drama!");
       setAlertType("success");
       onSubmit(kode, deskripsi);
 
@@ -82,7 +84,7 @@ export default function NewDramaForm({ onSubmit }: NewDramaFormProps) {
                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                      <Input
-                        placeholder="Judul Drama"
+                        placeholder="Title Drama"
                         value={kode}
                         onChange={(e) => setKode(e.target.value)}
                         className="bg-white/5 border-white/10 text-xl font-bold placeholder:text-white/30"
@@ -91,7 +93,7 @@ export default function NewDramaForm({ onSubmit }: NewDramaFormProps) {
 
                   <div>
                      <Textarea
-                        placeholder="Deskripsi Drama"
+                        placeholder="Description Drama"
                         value={deskripsi}
                         onChange={(e) => setDeskripsi(e.target.value)}
                         className="bg-white/5 border-white/10 min-h-[100px] placeholder:text-white/30"
@@ -111,7 +113,7 @@ export default function NewDramaForm({ onSubmit }: NewDramaFormProps) {
                      ) : (
                         <>
                            <Flame className="w-5 h-5 mr-2" />
-                           Kirim Drama Baru
+                           Submit Drama
                         </>
                      )}
                   </Button>

@@ -41,13 +41,72 @@ export async function getDrama(): Promise<Drama[]> {
       for (let i = 1; i <= lastId; i++) {
          const drama = await contract.drama(i);
          if (drama[2] === ethers.ZeroAddress) continue;
+
+         // Fetch topics for this drama
+         const topics = [];
+         let continueFetching = true;
+         let topicIndex = 0;
+         let maxTolerance = 5;
+         while (continueFetching) {
+            try {
+               const topic = await contract.topics(i, topicIndex);
+               if (!topic || topic.pembuat === ethers.ZeroAddress) {
+                  topicIndex++;
+                  continue;
+               }
+
+               // Determine topic type based on content and metadata
+               let topicType: "link" | "image" | "text";
+               const content = topic.link;
+
+               if (
+                  content.startsWith("http://") ||
+                  content.startsWith("https://")
+               ) {
+                  // It's a standard URL - check if it's an image URL
+                  const imageExtRegex = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i;
+                  topicType = imageExtRegex.test(content) ? "image" : "link";
+               } else if (content.includes(".") && !content.includes(" ")) {
+                  // If it has a dot but no spaces, it's likely a domain/URL
+                  topicType = "link";
+               } else if (content.includes("Qm") || content.includes("baf")) {
+                  // If it starts with Qm or baf, it's an IPFS hash
+                  topicType = "image";
+               } else {
+                  // Default to text for anything else
+                  topicType = "text";
+               }
+
+               // Process content based on detected type
+               let processedContent = topic.link;
+
+               // Remove any special prefixes we may have added
+               if (processedContent.startsWith("__LINK__:")) {
+                  processedContent = processedContent.substring(9);
+               } else if (processedContent.startsWith("__TEXT__:")) {
+                  processedContent = processedContent.substring(9);
+               }
+
+               topics.push({
+                  id: topicIndex.toString(),
+                  type: topicType,
+                  content: processedContent,
+                  pembuat: topic.pembuat,
+                  waktu: Number(topic.waktu.toString()) * 1000,
+               });
+               topicIndex++;
+            } catch (error) {
+               continueFetching = false;
+            }
+         }
+
          result.push({
             id: i.toString(),
             kode: drama[0].toString(),
             deskripsi: drama[1].toString(),
             creator: drama[2].toString(),
             timestamp: Number(drama[3].toString()) * 1000,
-            topics: [],
+            topics: topics,
          });
       }
       return result;
@@ -79,14 +138,30 @@ export async function tambahDramaBaru(
 
 export async function tambahTopikDrama(
    dramaId: string,
-   link: string
+   link: string,
+   signer: any
 ): Promise<boolean> {
-   // Simulate contract interaction
-   console.log("Adding topic to drama:", { dramaId, link });
-   return true;
+   try {
+      const contract = new ethers.Contract(
+         SC_ADDRESS,
+         require("@/app/context/abi.json"),
+         signer
+      );
+
+      const tx = await contract.tambahTopikDrama(link, dramaId);
+      await tx.wait();
+
+      return true;
+   } catch (error) {
+      console.error("Error adding topic to drama:", error);
+      return false;
+   }
 }
 
-export async function hapusDrama(dramaId: string, signer: any): Promise<boolean> {
+export async function hapusDrama(
+   dramaId: string,
+   signer: any
+): Promise<boolean> {
    try {
       const contract = new ethers.Contract(
          SC_ADDRESS,
@@ -103,11 +178,22 @@ export async function hapusDrama(dramaId: string, signer: any): Promise<boolean>
 
 export async function hapusTopikDrama(
    dramaId: string,
-   topicId: string
+   topicId: string,
+   signer: any
 ): Promise<boolean> {
-   // Simulate contract interaction
-   console.log("Deleting topic from drama:", { dramaId, topicId });
-   return true;
+   try {
+      const contract = new ethers.Contract(
+         SC_ADDRESS,
+         require("@/app/context/abi.json"),
+         signer
+      );
+
+      await contract.hapusTopikDrama(dramaId, topicId);
+      return true;
+   } catch (error) {
+      console.error("Error deleting topic from drama:", error);
+      return false;
+   }
 }
 
 export async function destroyContract(): Promise<boolean> {

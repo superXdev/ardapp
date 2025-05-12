@@ -16,7 +16,20 @@ export default function DramaCardHeader({ kode, timestamp }: DramaCardHeaderProp
           <h3 className="text-xl font-bold text-white">{kode}</h3>
         </div>
         <div className="text-sm text-white/70">
-          {formatDistanceToNow(new Date(timestamp), { addSuffix: true })}
+          {(() => {
+            try {
+              // Ensure timestamp is a valid date
+              const date = new Date(timestamp);
+              // Check if date is valid before formatting
+              if (isNaN(date.getTime())) {
+                return 'Unknown date';
+              }
+              return formatDistanceToNow(date, { addSuffix: true });
+            } catch (error) {
+              console.error('Error formatting date:', error);
+              return 'Unknown date';
+            }
+          })()}
         </div>
       </div>
     </CardHeader>

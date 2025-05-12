@@ -112,7 +112,7 @@ export default function Home() {
    const indexOfFirstDrama = indexOfLastDrama - dramasPerPage;
    const currentDramas = dramas
       ? dramas.slice(indexOfFirstDrama, indexOfLastDrama)
-      : [];
+      : null;
    const totalPages = dramas ? Math.ceil(dramas.length / dramasPerPage) : 0;
 
    return (

@@ -6,10 +6,11 @@ import { useState, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
 import type { Drama } from "@/lib/types";
 import { Card } from "@/components/ui/card";
-import DramaCardHeader from "./drama-card/DramaCardHeader";
-import DramaCardContent from "./drama-card/DramaCardContent";
-import DramaCardTopics from "./drama-card/DramaCardTopics";
-import DramaCardActions from "./drama-card/DramaCardActions";
+import DramaCardHeader from "./drama-card/header";
+import DramaCardContent from "./drama-card/content";
+import DramaCardTopics from "./drama-card/topics";
+import DramaCardActions from "./drama-card/actions";
+import DramaCardReactions from "./drama-card/reactions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -107,6 +108,8 @@ export default function DramaCard({
             deskripsi={drama.deskripsi}
             creator={drama.creator}
          />
+
+         <DramaCardReactions dramaId={drama.id} />
 
          <div className="pt-4 border-t border-white/10 px-6">
             <div className="flex justify-between items-center mb-2">

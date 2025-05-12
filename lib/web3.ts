@@ -188,7 +188,9 @@ export async function hapusTopikDrama(
          signer
       );
 
-      await contract.hapusTopikDrama(dramaId, topicId);
+      const tx = await contract.hapusTopikDrama(dramaId, topicId);
+      await tx.wait();
+
       return true;
    } catch (error) {
       console.error("Error deleting topic from drama:", error);

@@ -71,6 +71,13 @@ export default function DramaCard({
 
       try {
          setIsSubmittingTopic(true);
+         console.log("Adding topic:", {
+            dramaId: drama.id,
+            topicType,
+            linkContent,
+            textContent,
+            imagePreview,
+         });
 
          if (topicType === "link" && linkContent.trim()) {
             // Process link content before sending to ensure it has proper format
@@ -83,7 +90,7 @@ export default function DramaCard({
             ) {
                processedLink = `https://${processedLink}`;
             }
-
+            console.log("Adding link topic:", drama.id, "link", processedLink);
             await onAddTopic(drama.id, "link", processedLink);
             setLinkContent("");
          } else if (topicType === "image" && imagePreview) {

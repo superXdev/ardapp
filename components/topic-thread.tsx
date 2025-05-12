@@ -59,8 +59,13 @@ export default function TopicThread({
    walletAddress,
    onDeleteTopic,
 }: TopicThreadProps) {
-   const isOwner = walletAddress === topic.pembuat;
+   // Check if user is owner - make case-insensitive comparison
+   // Also show delete button in development mode for testing
+   const isOwner = walletAddress && 
+      (walletAddress.toLowerCase() === topic.pembuat.toLowerCase() || 
+       process.env.NODE_ENV === 'development');
    const [lightboxOpen, setLightboxOpen] = useState(false);
+   const [isDeleting, setIsDeleting] = useState(false);
 
    // Process content based on its type for better display
    let processedContent = topic.content;
@@ -197,15 +202,33 @@ export default function TopicThread({
                </div>
             </div>
 
-            {
+            {/* Always show delete button for now to debug */}
+            {true && (
                <button
-                  onClick={() => onDeleteTopic(dramaId, topic.id)}
-                  className="text-[#ff416c] hover:text-[#ff3162] transition-colors p-1"
+                  onClick={async () => {
+                     if (window.confirm('Are you sure you want to delete this topic?')) {
+                        setIsDeleting(true);
+                        try {
+                           await onDeleteTopic(dramaId, topic.id);
+                        } catch (error) {
+                           console.error('Error deleting topic:', error);
+                           alert('Failed to delete topic. Please try again.');
+                        } finally {
+                           setIsDeleting(false);
+                        }
+                     }
+                  }}
+                  className="text-[#ff416c] hover:text-[#ff3162] transition-colors p-1 disabled:opacity-50"
+                  disabled={isDeleting}
                   aria-label="Delete topic"
                >
-                  <Trash2 className="w-4 h-4" />
+                  {isDeleting ? (
+                     <span className="animate-pulse">...</span>
+                  ) : (
+                     <Trash2 className="w-4 h-4" />
+                  )}
                </button>
-            }
+            )}
          </div>
 
          {detectedType === "image" && lightboxOpen && (

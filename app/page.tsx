@@ -5,9 +5,9 @@ import { ethers } from "ethers";
 
 // TypeScript declaration for window.ethereum
 declare global {
-  interface Window {
-    ethereum?: Record<string, unknown>;
-  }
+   interface Window {
+      ethereum?: Record<string, unknown>;
+   }
 }
 import HeroSection from "@/components/hero-section";
 import NewDramaForm from "@/components/new-drama-form";
@@ -15,7 +15,13 @@ import DramaFeed from "@/components/drama-feed";
 import OwnerActions from "@/components/owner-actions";
 import Pagination from "@/components/pagination";
 import type { Drama, Topic } from "@/lib/types";
-import { getCurrentWalletAddress, getDrama, isContractOwner, tambahTopikDrama as addTopicToContract, hapusTopikDrama as deleteTopicFromContract } from "@/lib/web3";
+import {
+   getCurrentWalletAddress,
+   getDrama,
+   isContractOwner,
+   tambahTopikDrama as addTopicToContract,
+   hapusTopikDrama as deleteTopicFromContract,
+} from "@/lib/web3";
 import { useAppKitAccount } from "@reown/appkit/react";
 
 export default function Home() {
@@ -71,35 +77,35 @@ export default function Home() {
 
          // Prepare content based on the selected type
          let processedContent = content;
-         
+
          // For links - ensure they have the proper protocol prefix
-         if (type === "link" && !content.startsWith("http://") && !content.startsWith("https://")) {
+         if (
+            type === "link" &&
+            !content.startsWith("http://") &&
+            !content.startsWith("https://")
+         ) {
             processedContent = `https://${content}`;
          }
-         
-         // Add the type markers for explicit content type tracking
-         if (type === "link") {
-            processedContent = `__LINK__:${processedContent}`;
-         } else if (type === "text") {
-            processedContent = `__TEXT__:${processedContent}`;
-         }
-         // No prefix needed for images - they're detected by content type
-         
+
          // Send to the blockchain
-         const success = await addTopicToContract(dramaId, processedContent, signer);
+         const success = await addTopicToContract(
+            dramaId,
+            processedContent,
+            signer
+         );
 
          if (success) {
             // Optimistically update UI with the properly processed content
             // We need to use the same processing logic as in the backend
             let displayContent = processedContent;
-            
+
             // Remove any special prefixes we added
-            if (displayContent.startsWith('__LINK__:')) {
+            if (displayContent.startsWith("__LINK__:")) {
                displayContent = displayContent.substring(9);
-            } else if (displayContent.startsWith('__TEXT__:')) {
+            } else if (displayContent.startsWith("__TEXT__:")) {
                displayContent = displayContent.substring(9);
             }
-            
+
             const newTopic: Topic = {
                id: Math.random().toString(36).substring(2, 9), // This will be replaced on refresh
                type,
@@ -153,7 +159,11 @@ export default function Home() {
          const signer = await provider.getSigner();
 
          // Call the smart contract function
-         const success = await deleteTopicFromContract(dramaId, topicId, signer);
+         const success = await deleteTopicFromContract(
+            dramaId,
+            topicId,
+            signer
+         );
 
          if (success) {
             // Optimistically update UI
@@ -162,7 +172,9 @@ export default function Home() {
                   if (drama.id === dramaId) {
                      return {
                         ...drama,
-                        topics: drama.topics.filter((topic) => topic.id !== topicId),
+                        topics: drama.topics.filter(
+                           (topic) => topic.id !== topicId
+                        ),
                      };
                   }
                   return drama;
